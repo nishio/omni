@@ -1,0 +1,62 @@
+name: Etude Create Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        lfs: true
+
+    - name: ls
+      run: ls -lt
+
+    - name: Set up Git
+      run: |
+        git config user.name github-actions[bot]
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+    - name: Remove Tag
+      run: |
+        git push --delete origin latest
+
+    - name: Create Tag
+      id: create_tag
+      run: |
+        git tag latest
+        git push origin latest
+
+    - name: Delete Old Release
+      run: |
+        LATEST_RELEASE_TAG=$(gh release view --json tagName --jq '.tagName' || echo "")
+        if [[ ! -z "$LATEST_RELEASE_TAG" ]]; then
+          gh release delete $LATEST_RELEASE_TAG --confirm
+        fi
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+        tag_name: latest
+        release_name: Release
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload_release_asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} 
+        asset_path: ./omoikane.pickle
+        asset_name: omoikane.pickle
+        asset_content_type: application/octet-stream
