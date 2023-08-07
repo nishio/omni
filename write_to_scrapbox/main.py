@@ -7,11 +7,11 @@ import generate_pages
 dotenv.load_dotenv()
 SID = os.getenv("SID")
 
-project = "omoikane"
+PROJECT = os.getenv("PROJECT_NAME")
 
 
 API_ME = "https://scrapbox.io/api/users/me"
-API_IMPORT = "https://scrapbox.io/api/page-data/import/{project}.json"
+import_api_url = f"https://scrapbox.io/api/page-data/import/{PROJECT}.json"
 
 
 def write_pages(pages):
@@ -20,10 +20,9 @@ def write_pages(pages):
     r.raise_for_status()
     csrfToken = r.json()["csrfToken"]
 
-    url = API_IMPORT.format(project=project)
     data = json.dumps({"pages": pages})
     r = requests.post(
-        url,
+        import_api_url,
         files={"import-file": data},
         headers={
             "Cookie": cookie,
