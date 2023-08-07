@@ -1,6 +1,10 @@
 import pickle
 import os
+import dotenv
 
+dotenv.load_dotenv()
+PROJECT = os.environ.get("PROJECT_NAME")
+assert PROJECT
 
 def update_from_scrapbox_json(name, json_name, is_public=False):
     "mock"
@@ -10,7 +14,7 @@ def update_from_scrapbox_json(name, json_name, is_public=False):
     vs = main.VectorStore(name, create_if_not_exist=True)
     payload = {
         "title": "MOCK TEST",
-        "project": project,
+        "project": PROJECT,
         "text": "MOCK TEST",
         "is_public": True,
     }
@@ -22,10 +26,9 @@ def update_from_scrapbox_json(name, json_name, is_public=False):
 
 if __name__ == "__main__":
     PAGE_LIMIT = 0
-    # `project` is global variable and used to make payload for scrapbox
-    project = "omoikane"
     update_from_scrapbox_json(
-        "omoikane.pickle",
-        "omoikane.json",
+        f"{PROJECT}.pickle",
+        f"{PROJECT}.json",
         is_public=True,
     )
+    print(f"OK, wrote {PROJECT}.pickle")
