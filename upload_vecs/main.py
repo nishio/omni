@@ -10,9 +10,13 @@ import pickle
 import dotenv
 import os
 
-dotenv.load_dotenv()
-COLLECTION_NAME = "omoikane"
 
+dotenv.load_dotenv()
+QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY")
+QDRANT_URL = os.environ.get("QDRANT_URL")
+PROJECT_NAME = os.environ.get("PROJECT_NAME")
+COLLECTION_NAME = os.environ.get("COLLECTION_NAME") or PROJECT_NAME
+assert QDRANT_API_KEY and QDRANT_URL and PROJECT_NAME
 
 def get_64bit_hash_from_tuple(input_tuple):
     input_string = "".join(map(str, input_tuple))
@@ -22,14 +26,10 @@ def get_64bit_hash_from_tuple(input_tuple):
 
 
 def main(pickle_names, IS_LOCAL=False, TO_RESET=False):
-    IS_LOCAL = False
     if IS_LOCAL:
         client = QdrantClient("localhost", port=6333)
     else:
-        client = QdrantClient(
-            url="https://287c9d42-32c1-41e8-b246-cf912c350e84.us-east-1-0.aws.cloud.qdrant.io:6333",
-            api_key=os.getenv("QDRANT_API_KEY"),
-        )
+        client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
     if TO_RESET:
         client.recreate_collection(
@@ -44,7 +44,7 @@ def main(pickle_names, IS_LOCAL=False, TO_RESET=False):
     )
 
     for pickle_name in pickle_names:
-        print(pickle_name)
+        print("uploading", pickle_name)
         data = pickle.load(open(pickle_name, "rb"))
         keys = list(data.keys())
         batches = [keys[i : i + 100] for i in range(0, len(keys), 100)]
@@ -80,7 +80,7 @@ def main(pickle_names, IS_LOCAL=False, TO_RESET=False):
         collection_name=COLLECTION_NAME,
         optimizer_config=models.OptimizersConfigDiff(indexing_threshold=20000),
     )
-
+    print("OK")
 
 if __name__ == "__main__":
-    main(["omoikane.pickle"], IS_LOCAL=False, TO_RESET=True)
+    main([f"{PROJECT_NAME}.pickle"], IS_LOCAL=False)
