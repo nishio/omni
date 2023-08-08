@@ -1,4 +1,4 @@
-name: Embed Omoikane
+name: Embed
 
 on:
   workflow_dispatch:
@@ -30,14 +30,14 @@ jobs:
 
       - uses: denoland/setup-deno@v1
 
-      - name: Export from Scrapbox(/omoikane to omoikane.json)
+      - name: Export from Scrapbox(/PROJECT_NAME to PROJECT_NAME.json)
         run: export_from_scrapbox/start.sh
 
 
       - name: Authenticate for gh
         run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Download Latest Release  if exists (get omoikane.pickle for cache)
+      - name: Download Latest Release  if exists (get PROJECT_NAME.pickle for cache)
         run: |
           LATEST_RELEASE_TAG=$(gh release view --json tagName --jq '.tagName' || echo "")
           echo "LATEST_RELEASE_TAG: $LATEST_RELEASE_TAG"
@@ -45,9 +45,9 @@ jobs:
             ASSET_DOWNLOAD_URL=$(gh release view $LATEST_RELEASE_TAG --json assets --jq '.assets[0].url' || echo "")
             echo "ASSET_DOWNLOAD_URL: $ASSET_DOWNLOAD_URL"
             if [[ ! -z "$ASSET_DOWNLOAD_URL" ]]; then
-              wget $ASSET_DOWNLOAD_URL || echo "Failed to download asset."
-              if [[ -f "omoikane.pickle.1" ]]; then
-                mv omoikane.pickle.1 omoikane.pickle
+              wget -nv $ASSET_DOWNLOAD_URL || echo "Failed to download asset."
+              if [[ -f "$PROJECT_NAME.pickle.1" ]]; then
+                mv "$PROJECT_NAME.pickle.1" "$PROJECT_NAME.pickle"
               fi
             else
               echo "Failed to get asset download url."
@@ -56,7 +56,7 @@ jobs:
             echo "Failed to get latest release tag."
           fi
 
-      - name: Embed (omoikane.json to omoikane.pickle)
+      - name: Embed (PROJECT_NAME.json to PROJECT_NAME.pickle)
         run: python make_vecs_from_json/main.py
 
 
@@ -100,15 +100,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./omoikane.pickle
-          asset_name: omoikane.pickle
+          asset_path: ./${{ secrets.PROJECT_NAME }}.pickle
+          asset_name: ${{ secrets.PROJECT_NAME }}.pickle
           asset_content_type: application/octet-stream
 
 
-      - name: Upload (omoikane.pickle to Qdrant)
+      - name: Upload (PROJECT_NAME.pickle to Qdrant)
         run: python upload_vecs/main.py
 
-      - name: Generate Report and write (omoikane.json to Scrapbox)
+      - name: Generate Report and write (PROJECT_NAME.json to Scrapbox)
         run: python write_to_scrapbox/main.py
 
 
