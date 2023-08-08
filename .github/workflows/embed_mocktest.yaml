@@ -43,7 +43,7 @@ jobs:
             ASSET_DOWNLOAD_URL=$(gh release view $LATEST_RELEASE_TAG --json assets --jq '.assets[0].url' || echo "")
             echo "ASSET_DOWNLOAD_URL: $ASSET_DOWNLOAD_URL"
             if [[ ! -z "$ASSET_DOWNLOAD_URL" ]]; then
-              wget $ASSET_DOWNLOAD_URL || echo "Failed to download asset."
+              wget -nv $ASSET_DOWNLOAD_URL || echo "Failed to download asset."
               if [[ -f "$PROJECT_NAME.pickle.1" ]]; then
                 mv "$PROJECT_NAME.pickle.1" "$PROJECT_NAME.pickle"
               fi
