@@ -25,7 +25,9 @@ import os
 DEFAULT_BLOCK_SIZE = 500
 
 dotenv.load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+PROJECT = os.getenv("PROJECT_NAME")
+openai.api_key = OPENAI_API_KEY
 enc = tiktoken.get_encoding("cl100k_base")
 
 
@@ -135,7 +137,7 @@ def update_from_scrapbox_json(
             if get_size(body) > block_size:
                 payload = {
                     "title": title,
-                    "project": project,
+                    "project": PROJECT,
                     "text": "\n".join(buf),
                     "is_public": is_public,
                 }
@@ -145,7 +147,7 @@ def update_from_scrapbox_json(
         if body:
             payload = {
                 "title": title,
-                "project": project,
+                "project": PROJECT,
                 "text": "\n".join(buf),
                 "is_public": is_public,
             }
@@ -262,11 +264,9 @@ class VectorStore:
 
 
 if __name__ == "__main__":
-    PAGE_LIMIT = 0
-    # `project` is global variable and used to make payload for scrapbox
-    project = "omoikane"
+    PAGE_LIMIT = 0  # 0 means no limit
     update_from_scrapbox_json(
-        "omoikane.pickle",
-        "omoikane.json",
+        f"{PROJECT}.pickle",
+        f"{PROJECT}.json",
         is_public=True,
     )
