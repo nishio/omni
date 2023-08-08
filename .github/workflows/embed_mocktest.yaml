@@ -55,7 +55,7 @@ jobs:
           fi
 
       - name: Mock Embed (PROJECT_NAME.json to PROJECT_NAME.pickle)
-        run: python make_vecs_from_json/mock.py
+        run: python make_vecs_from_json/test.py
 
 
       - name: Set up Git
