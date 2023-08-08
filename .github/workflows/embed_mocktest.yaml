@@ -98,8 +98,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./${{ PROJECT_NAME }}.pickle
-          asset_name: ${{ PROJECT_NAME }}.pickle
+          asset_path: ./${{ secrets.PROJECT_NAME }}.pickle
+          asset_name: ${{ secrets.PROJECT_NAME }}.pickle
           asset_content_type: application/octet-stream
 
 
