@@ -1,4 +1,4 @@
-name: Embed Omoikane(Mock Test)
+name: Embed(Mock Test)
 
 on:
   workflow_dispatch:
