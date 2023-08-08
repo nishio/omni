@@ -1,6 +1,7 @@
 # Omoikane Embed
 
-This is a tool to embed a [Omoikane](https://scrapbox.io/omoikane/) scrapbox project.
+This is a tool to embed contents in a Scrapbox project into vector space.
+It was made for [Omoikane](https://scrapbox.io/omoikane/) scrapbox project.
 Using Github Actions run following actions automatically in daily basis.
 
 - 1: Fetch all pages from Scrapbox
