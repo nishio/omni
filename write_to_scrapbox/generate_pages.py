@@ -7,6 +7,9 @@ import pickle
 import datetime
 import random
 import tiktoken
+import re
+import requests
+import argparse
 
 dotenv.load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
