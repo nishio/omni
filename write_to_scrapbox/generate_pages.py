@@ -69,10 +69,11 @@ def main():
     previous_notes = "\n".join(previous_notes_lines)
 
     data = pickle.load(open(f"{PROJECT}.pickle", "rb"))
-    # take 2000 tokens digests
+
+    # fill the rest with random fragments
     keys = list(data.keys())
     random.shuffle(keys)
-    rest = 6000 - get_size(previous_notes)
+    rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
     digests = []
     titles = []
     while rest > 0:
