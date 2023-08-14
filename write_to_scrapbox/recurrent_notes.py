@@ -61,6 +61,7 @@ def make_digest(payload):
 
 LESS_INTERSTING = "___BELOW_IS_LESS_INTERESTING___"
 
+
 def find_last_note_from_pages(pages):
     bot_output = []
     for page in pages:
@@ -75,12 +76,12 @@ def find_last_note_from_json():
     # find latest note from JSON
     jsondata = json.load(open(f"{PROJECT}.json"))
     pages = jsondata["pages"]
-    return find_last_note_from_json(pages)
+    return find_last_note_from_pages(pages)
 
 
 def title_to_url(title, project_name):
     # Replace spaces with underscores
-    title_with_underscores = title.replace(' ', '_')
+    title_with_underscores = title.replace(" ", "_")
     # Encode non-ASCII characters
     encoded_title = quote(title_with_underscores)
     # Construct the URL
@@ -99,7 +100,6 @@ def find_last_note_from_scrapbox():
     bot_output.sort()
     prev_title = bot_output[-1]
     return read_note_from_scrapbox(title_to_url(prev_title, PROJECT))
-
 
 
 def read_note_from_scrapbox(url):
@@ -138,7 +138,11 @@ def get_previous_notes(args):
 def main():
     parser = argparse.ArgumentParser(description="Process a URL")
     parser.add_argument("--url", type=str, help="The URL to process", required=False)
-    parser.add_argument("--get-latest", action="store_true", help="Get the latest page from online Scrapbox")
+    parser.add_argument(
+        "--get-latest",
+        action="store_true",
+        help="Get the latest page from online Scrapbox",
+    )
     args = parser.parse_args()
 
     date = datetime.datetime.now()
@@ -149,7 +153,7 @@ def main():
     pickle_size = os.path.getsize(f"{PROJECT}.pickle")
 
     prev_title, previous_notes = get_previous_notes(args)
- 
+
     data = pickle.load(open(f"{PROJECT}.pickle", "rb"))
 
     # fill the rest with random fragments
