@@ -137,6 +137,27 @@ def get_previous_notes(args):
     return prev_title, previous_notes
 
 
+def fill_with_random_fragments(rest):
+    # fill the rest with random fragments
+    data = pickle.load(open(f"{PROJECT}.pickle", "rb"))
+    keys = list(data.keys())
+    random.shuffle(keys)
+    digests = []
+    titles = []
+    while rest > 0:
+        p = keys.pop(0)
+        payload = data[p][1]
+        s = get_size(payload["text"])
+        if s > rest:
+            break
+        digests.append(make_digest(payload))
+        titles.append(payload["title"])
+        rest -= s
+
+    digest_str = "\n".join(digests)
+    return titles, digest_str
+
+
 def main():
     parser = argparse.ArgumentParser(description="Process a URL")
     parser.add_argument("--url", type=str, help="The URL to process", required=False)
@@ -156,25 +177,9 @@ def main():
 
     prev_title, previous_notes = get_previous_notes(args)
 
-    data = pickle.load(open(f"{PROJECT}.pickle", "rb"))
-
-    # fill the rest with random fragments
-    keys = list(data.keys())
-    random.shuffle(keys)
     rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
-    digests = []
-    titles = []
-    while rest > 0:
-        p = keys.pop(0)
-        payload = data[p][1]
-        s = get_size(payload["text"])
-        if s > rest:
-            break
-        digests.append(make_digest(payload))
-        titles.append(payload["title"])
-        rest -= s
 
-    digest_str = "\n".join(digests)
+    titles, digest_str = fill_with_random_fragments(rest)
 
     prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
     print(prompt)
