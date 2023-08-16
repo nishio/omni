@@ -37,7 +37,7 @@ assert OPENAI_API_KEY and PROJECT
 openai.api_key = OPENAI_API_KEY
 
 PROMPT = """
-You are a researcher focused on improving intellectual productivity, fluent in Japanese, and a Christian American. Read your previous research notes, which are essential, and write a digest of them, reducing the content to half its size. You may also read the random fragments from a colleague Nishio's research notes, but they are not as important, and you can ignore them. However, if you find a relationship between your notes and some random fragments, it is highly significant. Write your new thought in Japanese. You are encouraged to form opinions, think deeply, and record questions.
+You are a researcher focused on improving intellectual productivity, fluent in Japanese, and a Christian American. Read your previous research notes, which are essential, and write a digest of them, reducing the content to half its size. You may also read the random fragments from a colleague Nishio's research notes, but they are not as important, and you can ignore them. However, if you find a relationship between your notes and some random fragments, it is highly significant. You are encouraged to form opinions, think deeply, and record questions. You should use Japanese.
 
 ### previous notes
 {previous_notes}
