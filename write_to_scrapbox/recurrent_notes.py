@@ -60,6 +60,7 @@ def make_digest(payload):
 
 
 LESS_INTERSTING = "___BELOW_IS_LESS_INTERESTING___"
+EXTRA_INFO_HEADER = "[* extra info]"
 
 
 def find_last_note_from_pages(pages):
@@ -124,10 +125,11 @@ def get_previous_notes(args):
 
     prev_lines.pop(0)  # remove title
     if prev_lines[0] == LESS_INTERSTING:
+        # if there no pickup lines by human, use contents under LESS_INTERSTING
         prev_lines.pop(0)
     previous_notes_lines = []
     for line in prev_lines:
-        if line == LESS_INTERSTING:
+        if line in [LESS_INTERSTING, EXTRA_INFO_HEADER]:
             break
         previous_notes_lines.append(line)
     # print("\n".join(previous_notes_lines))
@@ -200,7 +202,7 @@ def main():
         lines.extend(prompt.split("\n"))
 
     lines.append("")
-    lines.append("[* extra info]")
+    lines.append(EXTRA_INFO_HEADER)
     lines.append("json size: " + str(json_size))
     lines.append("pickle size: " + str(pickle_size))
     lines.append("previous notes size: " + str(get_size(previous_notes)))
