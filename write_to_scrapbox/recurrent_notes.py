@@ -28,8 +28,7 @@ import requests
 import argparse
 from urllib.parse import quote
 from utils import markdown_to_scrapbox
-import numpy as np
-
+import vector_search
 
 dotenv.load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -53,51 +52,6 @@ enc = tiktoken.get_encoding("cl100k_base")
 
 def get_size(text):
     return len(enc.encode(text))
-
-
-## vector search from make_vecs_from_json/main.py
-# It would be better to make library modules for this.
-def embed_texts(texts, sleep_after_sucess=1):
-    EMBED_MAX_SIZE = 8150  # actual limit is 8191
-    if isinstance(texts, str):
-        texts = [texts]
-    for i, text in enumerate(texts):
-        text = text.replace("\n", " ")
-        tokens = enc.encode(text)
-        if len(tokens) > EMBED_MAX_SIZE:
-            text = enc.decode(tokens[:EMBED_MAX_SIZE])
-        texts[i] = text
-
-    while True:
-        try:
-            res = openai.Embedding.create(input=texts, model="text-embedding-ada-002")
-            time.sleep(sleep_after_sucess)
-        except Exception as e:
-            print(e)
-            time.sleep(1)
-            continue
-        break
-
-    return res
-
-
-def embed(text, sleep_after_sucess=0):
-    # short hand for single text
-    r = embed_texts(text, sleep_after_sucess=sleep_after_sucess)
-    return r["data"][0]["embedding"]
-
-
-def get_sorted(vindex, query):
-    q = np.array(embed(query, sleep_after_sucess=0))
-    buf = []
-    for body, (v, payload) in vindex.items():
-        buf.append((q.dot(v), body, payload))
-    buf.sort(reverse=True)
-    return buf
-
-
-#
-## vector search from make_vecs_from_json/main.py
 
 
 def make_digest(payload):
@@ -208,7 +162,7 @@ def fill_with_random_fragments(rest):
 def fill_with_related_fragments(rest, query, N=3):
     # fill the rest with vector search ressult fragments
     data = pickle.load(open(f"{PROJECT}.pickle", "rb"))
-    sorted_data = get_sorted(data, query)[:N]
+    sorted_data = vector_search.get_sorted(data, query)[:N]
 
     digests = []
     titles = []
