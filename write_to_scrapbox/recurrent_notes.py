@@ -203,6 +203,66 @@ def fill_with_related_fragments(rest, query, N=3):
     return titles, digest_str
 
 
+def overwrite_mode(args):
+    print("overwrite mode")
+    assert args.url, "URL is required in overwrite mode"
+    prev_title, prev_lines = read_note_from_scrapbox(args.url)
+    original_prev_lines = prev_lines.copy()
+
+    prev_lines.pop(0)  # remove title
+    if prev_lines[0] == LESS_INTERSTING:
+        # if there no pickup lines by human, use contents under LESS_INTERSTING
+        prev_lines.pop(0)
+    previous_notes_lines = []
+    for line in prev_lines:
+        if line in [LESS_INTERSTING, EXTRA_INFO_HEADER]:
+            break
+        previous_notes_lines.append(line)
+    previous_notes = "\n".join(previous_notes_lines)
+
+    output_page_title = prev_title
+    lines = [output_page_title, LESS_INTERSTING]
+    rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
+    titles, digest_str = fill_with_related_fragments(rest, previous_notes)
+    prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
+    print(prompt)
+
+    messages = [{"role": "system", "content": prompt}]
+    model = "gpt-4"
+    try:
+        response = openai.ChatCompletion.create(
+            model=model,
+            messages=messages,
+            temperature=0.0,
+            # max_tokens=max_tokens,
+            n=1,
+            stop=None,
+        )
+        ret = response.choices[0].message.content.strip()
+        print(ret)
+        ret = markdown_to_scrapbox(ret)
+        lines.extend(ret.split("\n"))
+    except Exception as e:
+        lines.append("Failed to generate report.")
+        lines.append(str(e))
+        lines.append("Prompt:")
+        lines.extend(prompt.split("\n"))
+
+    lines.append("")
+    lines.append(EXTRA_INFO_HEADER)
+    lines.append("titles: " + ", ".join(f"{s}" for s in titles))
+
+    date = datetime.datetime.now()
+    date = date.strftime("%Y-%m-%d %H:%M")
+    lines.append(f"generated: {date}")
+
+    lines.append("[* previous notes]")
+    lines.extend(original_prev_lines)
+
+    pages = [{"title": output_page_title, "lines": lines}]
+    return pages
+
+
 def main():
     parser = argparse.ArgumentParser(description="Process a URL")
     parser.add_argument("--url", type=str, help="The URL to process", required=False)
@@ -211,11 +271,20 @@ def main():
         action="store_true",
         help="Get the latest page from online Scrapbox",
     )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Overwrite the given page",
+    )
     args = parser.parse_args()
+
+    if args.overwrite:
+        return overwrite_mode(args)
 
     date = datetime.datetime.now()
     date = date.strftime("%Y-%m-%d %H:%M")
     output_page_title = "🤖" + date
+
     lines = [output_page_title, LESS_INTERSTING]
     json_size = os.path.getsize(f"{PROJECT}.json")
     pickle_size = os.path.getsize(f"{PROJECT}.pickle")
