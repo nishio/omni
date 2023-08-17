@@ -169,9 +169,14 @@ def fill_with_related_fragments(rest, query, N=3):
     while rest > 0 and sorted_data:
         p = sorted_data.pop(0)
         payload = p[2]
+        title = payload["title"]
 
         # take only 1 fragment from each page
-        if payload["title"] in titles:
+        if title in titles:
+            continue
+
+        # omit AI-generated pages
+        if title.startswith("🤖"):
             continue
 
         s = get_size(payload["text"])
