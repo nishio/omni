@@ -108,7 +108,11 @@ def read_note_from_scrapbox(url):
     """
     url example: https://scrapbox.io/nishio/%F0%9F%A4%962023-08-13_07:08
     """
+    if url == "input":
+        import urllib.parse
 
+        url = input("url> ")
+        print("url:", urllib.parse.unquote(url))
     api_url = re.sub(
         r"(https://scrapbox\.io)/([^/]+)/([^/]+)", r"\1/api/pages/\2/\3", url
     )
