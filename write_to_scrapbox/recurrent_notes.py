@@ -237,7 +237,7 @@ def overwrite_mode(prev_title, prev_lines):
     titles, digest_str = fill_with_related_fragments(rest, previous_notes)
     prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
     print(prompt)
-    line.extend(call_gpt(prompt))
+    lines.extend(call_gpt(prompt))
 
     lines.append("")
     lines.append(EXTRA_INFO_HEADER)
