@@ -255,6 +255,13 @@ def overwrite_mode(prev_title, prev_lines):
 
 
 def call_gpt(prompt, model="gpt-4"):
+    print("# Call GPT")
+    print("## Prompt")
+    print(prompt)
+    if args.skip_gpt:
+        print("## Skipped")
+        return ["GPT Skipped"]
+
     messages = [{"role": "system", "content": prompt}]
     lines = []
     try:
@@ -278,7 +285,7 @@ def call_gpt(prompt, model="gpt-4"):
     return lines
 
 
-def main_branch(args):
+def main_branch():
     """find latest AI-note (title: "🤖" + date), read it, and create new one"""
     print("# Main branch")
     date = datetime.datetime.now()
@@ -316,7 +323,24 @@ def make_embedding_report(previous_note_title, previous_notes, titles):
     return lines
 
 
+def multiheads():
+    print("# Multi-heads")
+    heads = []
+    jsondata = json.load(open(f"{PROJECT}.json"))
+    pages = jsondata["pages"]
+    for page in pages:
+        if page["title"].startswith("🤖🔁"):
+            heads.append((page["title"], page["lines"]))
+
+    pages_to_update = []
+    for head in heads:
+        pages_to_update.extend(overwrite_mode(*head))
+
+    return pages_to_update
+
+
 def main():
+    global args
     parser = argparse.ArgumentParser(description="Process a URL")
     parser.add_argument("--url", type=str, help="The URL to process", required=False)
     parser.add_argument(
@@ -329,6 +353,11 @@ def main():
         action="store_true",
         help="Overwrite the given page",
     )
+    parser.add_argument(
+        "--skip-gpt",
+        action="store_true",
+        help="skip GPT API call for tests",
+    )
     args = parser.parse_args()
 
     if args.overwrite and args.url:
@@ -336,7 +365,11 @@ def main():
         prev_title, prev_lines = read_note_from_scrapbox(args.url)
         return overwrite_mode(prev_title, prev_lines)
 
-    pages = main_branch(args)
+    pages_to_update = main_branch()
+
+    pages_to_update.extend(multiheads())
+
+    return pages_to_update
 
 
 if __name__ == "__main__":
