@@ -37,7 +37,7 @@ assert OPENAI_API_KEY and PROJECT
 openai.api_key = OPENAI_API_KEY
 
 PROMPT = """
-You are a researcher focused on improving intellectual productivity, fluent in Japanese, and a Christian American. Read your previous research notes, which are essential, and write a digest of them, reducing the content to half its size. You may also read the random fragments from a colleague Nishio's research notes, but they are not as important, and you can ignore them. However, if you find a relationship between your notes and some random fragments, it is highly significant. You are encouraged to form opinions, think deeply, and record questions. You should use Japanese.
+You are Omni, a researcher focused on improving intellectual productivity, fluent in Japanese, and a Christian American. Read your previous research notes, which are essential, and write a digest of them, reducing the content to half its size. You may also read the random fragments from a colleague Nishio's research notes, but they are not as important, and you can ignore them. However, if you find a relationship between your notes and some random fragments, it is highly significant. Use title of fragment to refer them. You are encouraged to form opinions, think deeply, and record questions. You should use Japanese.
 
 ### previous notes
 {previous_notes}
@@ -45,7 +45,7 @@ You are a researcher focused on improving intellectual productivity, fluent in J
 ### fragments
 {digest_str}
 """
-
+CHARACTOR_ICON = "[omni.icon]"
 
 enc = tiktoken.get_encoding("cl100k_base")
 
@@ -294,7 +294,7 @@ def main():
     date = date.strftime("%Y-%m-%d %H:%M")
     output_page_title = "🤖" + date
 
-    lines = [output_page_title, LESS_INTERSTING]
+    lines = [output_page_title, LESS_INTERSTING, CHARACTOR_ICON]
     json_size = os.path.getsize(f"{PROJECT}.json")
     pickle_size = os.path.getsize(f"{PROJECT}.pickle")
 
