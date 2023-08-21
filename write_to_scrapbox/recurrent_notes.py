@@ -212,10 +212,8 @@ def fill_with_related_fragments(rest, query, N=3):
     return titles, digest_str
 
 
-def overwrite_mode(args):
+def overwrite_mode(prev_title, prev_lines):
     print("overwrite mode")
-    assert args.url, "URL is required in overwrite mode"
-    prev_title, prev_lines = read_note_from_scrapbox(args.url)
     original_prev_lines = prev_lines.copy()
 
     prev_lines.pop(0)  # remove title
@@ -235,9 +233,26 @@ def overwrite_mode(args):
     titles, digest_str = fill_with_related_fragments(rest, previous_notes)
     prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
     print(prompt)
+    line.extend(call_gpt(prompt))
 
+    lines.append("")
+    lines.append(EXTRA_INFO_HEADER)
+    lines.append("titles: " + ", ".join(f"{s}" for s in titles))
+
+    date = datetime.datetime.now()
+    date = date.strftime("%Y-%m-%d %H:%M")
+    lines.append(f"generated: {date}")
+
+    lines.append("[* previous notes]")
+    lines.extend(original_prev_lines)
+
+    pages = [{"title": output_page_title, "lines": lines}]
+    return pages
+
+
+def call_gpt(prompt, model="gpt-4"):
     messages = [{"role": "system", "content": prompt}]
-    model = "gpt-4"
+    lines = []
     try:
         response = openai.ChatCompletion.create(
             model=model,
@@ -256,20 +271,44 @@ def overwrite_mode(args):
         lines.append(str(e))
         lines.append("Prompt:")
         lines.extend(prompt.split("\n"))
+    return lines
 
-    lines.append("")
-    lines.append(EXTRA_INFO_HEADER)
-    lines.append("titles: " + ", ".join(f"{s}" for s in titles))
 
+def main_branch(args):
+    """find latest AI-note (title: "🤖" + date), read it, and create new one"""
     date = datetime.datetime.now()
     date = date.strftime("%Y-%m-%d %H:%M")
-    lines.append(f"generated: {date}")
+    output_page_title = "🤖" + date
+    lines = [output_page_title, LESS_INTERSTING, CHARACTOR_ICON]
 
-    lines.append("[* previous notes]")
-    lines.extend(original_prev_lines)
+    previous_note_title, previous_notes = get_previous_notes(args)
+
+    rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
+
+    titles, digest_str = fill_with_related_fragments(rest, previous_notes)
+
+    prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
+    print(prompt)
+    lines.extend(call_gpt(prompt))
+    lines.extend(make_embedding_report(previous_note_title, previous_notes, titles))
 
     pages = [{"title": output_page_title, "lines": lines}]
     return pages
+
+
+def make_embedding_report(previous_note_title, previous_notes, titles):
+    lines = []
+    json_size = os.path.getsize(f"{PROJECT}.json")
+    pickle_size = os.path.getsize(f"{PROJECT}.pickle")
+
+    lines.append("")
+    lines.append(EXTRA_INFO_HEADER)
+    lines.append("json size: " + str(json_size))
+    lines.append("pickle size: " + str(pickle_size))
+    lines.append("previous notes size: " + str(get_size(previous_notes)))
+    lines.append(f"previous notes: [{previous_note_title}]")
+    lines.append("fragment titles: " + ", ".join(f"{s}" for s in titles))
+    return lines
 
 
 def main():
@@ -287,59 +326,12 @@ def main():
     )
     args = parser.parse_args()
 
-    if args.overwrite:
-        return overwrite_mode(args)
+    if args.overwrite and args.url:
+        # URL-specific overwrite, usually triggered by human
+        prev_title, prev_lines = read_note_from_scrapbox(args.url)
+        return overwrite_mode(prev_title, prev_lines)
 
-    date = datetime.datetime.now()
-    date = date.strftime("%Y-%m-%d %H:%M")
-    output_page_title = "🤖" + date
-
-    lines = [output_page_title, LESS_INTERSTING, CHARACTOR_ICON]
-    json_size = os.path.getsize(f"{PROJECT}.json")
-    pickle_size = os.path.getsize(f"{PROJECT}.pickle")
-
-    prev_title, previous_notes = get_previous_notes(args)
-
-    rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
-
-    titles, digest_str = fill_with_related_fragments(rest, previous_notes)
-
-    prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
-    print(prompt)
-
-    messages = [{"role": "system", "content": prompt}]
-    # model = "gpt-3.5-turbo"
-    model = "gpt-4"
-    try:
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=messages,
-            temperature=0.0,
-            # max_tokens=max_tokens,
-            n=1,
-            stop=None,
-        )
-        ret = response.choices[0].message.content.strip()
-        print(ret)
-        ret = markdown_to_scrapbox(ret)
-        lines.extend(ret.split("\n"))
-    except Exception as e:
-        lines.append("Failed to generate report.")
-        lines.append(str(e))
-        lines.append("Prompt:")
-        lines.extend(prompt.split("\n"))
-
-    lines.append("")
-    lines.append(EXTRA_INFO_HEADER)
-    lines.append("json size: " + str(json_size))
-    lines.append("pickle size: " + str(pickle_size))
-    lines.append("previous notes size: " + str(get_size(previous_notes)))
-    lines.append(f"previous notes: [{prev_title}]")
-    lines.append("titles: " + ", ".join(f"{s}" for s in titles))
-
-    print(lines)
-    pages = [{"title": output_page_title, "lines": lines}]
-    return pages
+    pages = main_branch(args)
 
 
 if __name__ == "__main__":
