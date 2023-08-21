@@ -120,12 +120,16 @@ def read_note_from_scrapbox(url):
     return page["title"], [line["text"] for line in page["lines"]]
 
 
-def get_previous_notes(args):
+def get_previous_notes():
+    print("## Get Previous Notes")
     if args.url:
+        print("get_previous_notes: from URL")
         prev_title, prev_lines = read_note_from_scrapbox(args.url)
     elif args.get_latest:
+        print("get_previous_notes: from Scrapbox API")
         prev_title, prev_lines = find_last_note_from_scrapbox()
     else:
+        print("get_previous_notes: from exported JSON")
         prev_title, prev_lines = find_last_note_from_json()
 
     prev_lines.pop(0)  # remove title
@@ -213,7 +217,7 @@ def fill_with_related_fragments(rest, query, N=3):
 
 
 def overwrite_mode(prev_title, prev_lines):
-    print("overwrite mode")
+    print("overwrite:", prev_title)
     original_prev_lines = prev_lines.copy()
 
     prev_lines.pop(0)  # remove title
@@ -276,19 +280,20 @@ def call_gpt(prompt, model="gpt-4"):
 
 def main_branch(args):
     """find latest AI-note (title: "🤖" + date), read it, and create new one"""
+    print("# Main branch")
     date = datetime.datetime.now()
     date = date.strftime("%Y-%m-%d %H:%M")
     output_page_title = "🤖" + date
     lines = [output_page_title, LESS_INTERSTING, CHARACTOR_ICON]
 
-    previous_note_title, previous_notes = get_previous_notes(args)
+    previous_note_title, previous_notes = get_previous_notes()
 
     rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
 
+    print("## Fill with related fragments")
     titles, digest_str = fill_with_related_fragments(rest, previous_notes)
 
     prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
-    print(prompt)
     lines.extend(call_gpt(prompt))
     lines.extend(make_embedding_report(previous_note_title, previous_notes, titles))
 
