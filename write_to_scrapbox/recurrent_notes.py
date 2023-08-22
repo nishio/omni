@@ -47,6 +47,7 @@ You are Omni, a researcher focused on improving intellectual productivity, fluen
 """
 CHARACTOR_ICON = "[omni.icon]"
 
+LESS_INTERESTING = "___BELOW_IS_LESS_INTERESTING___"
 enc = tiktoken.get_encoding("cl100k_base")
 
 
@@ -120,6 +121,37 @@ def read_note_from_scrapbox(url):
     return page["title"], [line["text"] for line in page["lines"]]
 
 
+def extract_previous_notes(prev_lines):
+    """
+    Extracts previous notes from a list of lines, filtering out less interesting and extra information headers.
+
+    Args:
+        prev_lines (list): List of lines containing previous notes and related information.
+
+    Returns:
+        previous_notes (str): A string containing the extracted previous notes.
+    """
+    # Remove title line
+    prev_lines.pop(0)
+
+    # Check if the first line is less interesting, and skip if needed
+    if prev_lines and prev_lines[0] == LESS_INTERESTING:
+        prev_lines.pop(0)
+
+    previous_notes_lines = []
+
+    # Extract previous notes lines until less interesting or extra info header is encountered
+    for line in prev_lines:
+        if line in [LESS_INTERESTING, EXTRA_INFO_HEADER]:
+            break
+        previous_notes_lines.append(line)
+
+    # Combine extracted lines into a string
+    previous_notes = "\n".join(previous_notes_lines)
+
+    return previous_notes
+
+
 def get_previous_notes():
     print("## Get Previous Notes")
     if args.url:
@@ -132,17 +164,7 @@ def get_previous_notes():
         print("get_previous_notes: from exported JSON")
         prev_title, prev_lines = find_last_note_from_json()
 
-    prev_lines.pop(0)  # remove title
-    if prev_lines[0] == LESS_INTERSTING:
-        # if there no pickup lines by human, use contents under LESS_INTERSTING
-        prev_lines.pop(0)
-    previous_notes_lines = []
-    for line in prev_lines:
-        if line in [LESS_INTERSTING, EXTRA_INFO_HEADER]:
-            break
-        previous_notes_lines.append(line)
-    # print("\n".join(previous_notes_lines))
-    previous_notes = "\n".join(previous_notes_lines)
+    previous_notes = extract_previous_notes(prev_lines)
     return prev_title, previous_notes
 
 
@@ -220,19 +242,10 @@ def overwrite_mode(prev_title, prev_lines):
     print("overwrite:", prev_title)
     original_prev_lines = prev_lines.copy()
 
-    prev_lines.pop(0)  # remove title
-    if prev_lines[0] == LESS_INTERSTING:
-        # if there no pickup lines by human, use contents under LESS_INTERSTING
-        prev_lines.pop(0)
-    previous_notes_lines = []
-    for line in prev_lines:
-        if line in [LESS_INTERSTING, EXTRA_INFO_HEADER]:
-            break
-        previous_notes_lines.append(line)
-    previous_notes = "\n".join(previous_notes_lines)
+    previous_notes = extract_previous_notes(prev_lines)
 
     output_page_title = prev_title
-    lines = [output_page_title, LESS_INTERSTING]
+    lines = [output_page_title, LESS_INTERESTING]
     rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
     titles, digest_str = fill_with_related_fragments(rest, previous_notes)
     prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
@@ -291,7 +304,7 @@ def main_branch():
     date = datetime.datetime.now()
     date = date.strftime("%Y-%m-%d %H:%M")
     output_page_title = "🤖" + date
-    lines = [output_page_title, LESS_INTERSTING, CHARACTOR_ICON]
+    lines = [output_page_title, LESS_INTERESTING, CHARACTOR_ICON]
 
     previous_note_title, previous_notes = get_previous_notes()
 
