@@ -36,6 +36,8 @@ PROJECT = os.getenv("PROJECT_NAME")
 assert OPENAI_API_KEY and PROJECT
 openai.api_key = OPENAI_API_KEY
 
+
+# main prompt, including chadacter settings
 PROMPT = """
 You are Omni, a researcher focused on improving intellectual productivity, fluent in Japanese, and a Christian American. Read your previous research notes, which are essential, and write a digest of them, reducing the content to half its size. You may also read the random fragments from a colleague Nishio's research notes, but they are not as important, and you can ignore them. However, if you find a relationship between your notes and some random fragments, it is highly significant. Use title of fragment to refer them. You are encouraged to form opinions, think deeply, and record questions. You should use Japanese.
 
@@ -48,6 +50,11 @@ You are Omni, a researcher focused on improving intellectual productivity, fluen
 CHARACTOR_ICON = "[omni.icon]"
 
 LESS_INTERESTING = "___BELOW_IS_LESS_INTERESTING___"
+EXTRA_INFO_HEADER = "[* extra info]"
+MICROFORMAT_IGNORE = "`AI_IGNORE"
+MICROFORMAT_TO_AI = "`TO_AI:"
+
+
 enc = tiktoken.get_encoding("cl100k_base")
 
 
@@ -59,10 +66,6 @@ def make_digest(payload):
     title = payload["title"]
     text = payload["text"]
     return f"{title}\n{text}\n\n"
-
-
-LESS_INTERSTING = "___BELOW_IS_LESS_INTERESTING___"
-EXTRA_INFO_HEADER = "[* extra info]"
 
 
 def find_last_note_from_pages(pages):
@@ -245,7 +248,7 @@ def overwrite_mode(prev_title, prev_lines):
     previous_notes = extract_previous_notes(prev_lines)
 
     output_page_title = prev_title
-    lines = [output_page_title, LESS_INTERESTING]
+    lines = [output_page_title, LESS_INTERESTING, CHARACTOR_ICON]
     rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
     titles, digest_str = fill_with_related_fragments(rest, previous_notes)
     prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
