@@ -352,7 +352,9 @@ def main():
 
     pages_to_update = main_branch()
 
-    pages_to_update.extend(multiheads())
+    if not args.url:
+        # when url is specified, user want to update the page only
+        pages_to_update.extend(multiheads())
 
     return pages_to_update
 
