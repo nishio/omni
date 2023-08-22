@@ -27,7 +27,7 @@ import re
 import requests
 import argparse
 from urllib.parse import quote
-from utils import markdown_to_scrapbox
+from utils import markdown_to_scrapbox, extract_microformat_to_ai
 import vector_search
 
 dotenv.load_dotenv()
@@ -147,6 +147,12 @@ def extract_previous_notes(prev_lines):
     for line in prev_lines:
         if line in [LESS_INTERESTING, EXTRA_INFO_HEADER]:
             break
+        if MICROFORMAT_IGNORE in line:
+            continue
+        if MICROFORMAT_TO_AI in line:
+            prompt = extract_microformat_to_ai(line)
+            raise NotImplementedError
+
         previous_notes_lines.append(line)
 
     # Combine extracted lines into a string
