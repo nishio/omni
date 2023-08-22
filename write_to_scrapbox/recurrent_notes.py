@@ -27,7 +27,12 @@ import re
 import requests
 import argparse
 from urllib.parse import quote
-from utils import markdown_to_scrapbox, extract_microformat_to_ai
+from utils import (
+    markdown_to_scrapbox,
+    LESS_INTERESTING,
+    EXTRA_INFO_HEADER,
+    extract_previous_notes,
+)
 import vector_search
 
 dotenv.load_dotenv()
@@ -48,11 +53,6 @@ You are Omni, a researcher focused on improving intellectual productivity, fluen
 {digest_str}
 """
 CHARACTOR_ICON = "[omni.icon]"
-
-LESS_INTERESTING = "___BELOW_IS_LESS_INTERESTING___"
-EXTRA_INFO_HEADER = "[* extra info]"
-MICROFORMAT_IGNORE = "`AI_IGNORE"
-MICROFORMAT_TO_AI = "`TO_AI:"
 
 
 enc = tiktoken.get_encoding("cl100k_base")
@@ -122,43 +122,6 @@ def read_note_from_scrapbox(url):
     )
     page = requests.get(api_url).json()  # currently not supported private project
     return page["title"], [line["text"] for line in page["lines"]]
-
-
-def extract_previous_notes(prev_lines):
-    """
-    Extracts previous notes from a list of lines, filtering out less interesting and extra information headers.
-
-    Args:
-        prev_lines (list): List of lines containing previous notes and related information.
-
-    Returns:
-        previous_notes (str): A string containing the extracted previous notes.
-    """
-    # Remove title line
-    prev_lines.pop(0)
-
-    # Check if the first line is less interesting, and skip if needed
-    if prev_lines and prev_lines[0] == LESS_INTERESTING:
-        prev_lines.pop(0)
-
-    previous_notes_lines = []
-
-    # Extract previous notes lines until less interesting or extra info header is encountered
-    for line in prev_lines:
-        if line in [LESS_INTERESTING, EXTRA_INFO_HEADER]:
-            break
-        if MICROFORMAT_IGNORE in line:
-            continue
-        if MICROFORMAT_TO_AI in line:
-            prompt = extract_microformat_to_ai(line)
-            raise NotImplementedError
-
-        previous_notes_lines.append(line)
-
-    # Combine extracted lines into a string
-    previous_notes = "\n".join(previous_notes_lines)
-
-    return previous_notes
 
 
 def get_previous_notes():
