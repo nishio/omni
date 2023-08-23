@@ -184,6 +184,7 @@ def fill_with_random_fragments(rest):
 
 def fill_with_related_fragments(rest, query, N=3, ng_list=[]):
     # fill the rest with vector search ressult fragments
+    assert query != ""
     data = pickle.load(open(f"{PROJECT}.pickle", "rb"))
     sorted_data = vector_search.get_sorted(data, query)
 
@@ -255,6 +256,10 @@ def overwrite_mode(prev_title, prev_lines):
     print("used pages:", used_pages)
 
     previous_notes = extract_previous_notes(prev_lines)
+
+    if previous_notes == "":
+        print("previous notes is empty, use title instead")
+        previous_notes = prev_title
 
     output_page_title = prev_title
     date = datetime.datetime.now()

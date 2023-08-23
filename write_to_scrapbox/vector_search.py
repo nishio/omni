@@ -24,6 +24,7 @@ def embed_texts(texts, sleep_after_sucess=1):
     EMBED_MAX_SIZE = 8150  # actual limit is 8191
     if isinstance(texts, str):
         texts = [texts]
+    assert all(text != "" for text in texts)
     for i, text in enumerate(texts):
         text = text.replace("\n", " ")
         tokens = enc.encode(text)

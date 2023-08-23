@@ -62,20 +62,32 @@ def extract_previous_notes(prev_lines):
         NotImplementedError: If a microformat TO_AI line is encountered.
     """
     if not prev_lines:
-        return ""
+        return ""  # this does not happen, because even empty page has title line
 
     # Remove title line
     prev_lines.pop(0)
 
+    if not prev_lines:
+        # empty page
+        return ""
+
     # Check if the first line is less interesting, and skip if needed
-    if prev_lines and prev_lines[0] == LESS_INTERESTING:
+    if prev_lines[0] == LESS_INTERESTING:
         prev_lines.pop(0)
 
     previous_notes_lines = []
 
     # Extract previous notes lines until less interesting, extra info header, or microformat is encountered
     for line in prev_lines:
-        if line in [LESS_INTERESTING, EXTRA_INFO_HEADER]:
+        if line == LESS_INTERESTING:
+            # check if the previous notes is empty (if there are only empty lines, it is empty)
+            body = "".join(previous_notes_lines).strip()
+            if body:
+                break
+            # if the previous notes is empty, continue to pick less interesting lines
+            previous_notes_lines = []
+            continue
+        if line == EXTRA_INFO_HEADER:
             break
         if MICROFORMAT_IGNORE in line:
             continue
@@ -138,6 +150,20 @@ class TestExtractPreviousNotes(unittest.TestCase):
         expected_notes = "AAA"
         self.assertEqual(extracted_notes, expected_notes)
 
+    def test_(self):
+        prev_lines = [
+            "Title",
+            "   ",
+            LESS_INTERESTING,
+            "BBB",
+            EXTRA_INFO_HEADER,
+            "More notes...",
+        ]
+
+        extracted_notes = extract_previous_notes(prev_lines)
+
+        expected_notes = "BBB"
+        self.assertEqual(extracted_notes, expected_notes)
 
 def parse_titles(line):
     """
