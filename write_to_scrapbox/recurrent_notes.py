@@ -237,7 +237,11 @@ def overwrite_mode(prev_title, prev_lines):
     previous_notes = extract_previous_notes(prev_lines)
 
     output_page_title = prev_title
-    lines = [output_page_title, LESS_INTERESTING, CHARACTOR_ICON]
+    date = datetime.datetime.now()
+    date = date.strftime("%Y-%m-%d %H:%M")
+
+    section_title = f"[*** {output_page_title}] {date} {CHARACTOR_ICON}"
+    lines = [output_page_title, LESS_INTERESTING, section_title]
     rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
     titles, digest_str = fill_with_related_fragments(rest, previous_notes)
     prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
@@ -248,8 +252,6 @@ def overwrite_mode(prev_title, prev_lines):
     lines.append(EXTRA_INFO_HEADER)
     lines.append("titles: " + ", ".join(f"{s}" for s in titles))
 
-    date = datetime.datetime.now()
-    date = date.strftime("%Y-%m-%d %H:%M")
     lines.append(f"generated: {date}")
 
     lines.append("[* previous notes]")
