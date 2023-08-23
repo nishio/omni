@@ -3,8 +3,8 @@ name: Embed
 on:
   workflow_dispatch:
   schedule:
-#    - cron: '0 22 * * *'  # JST 7:00
-    - cron: '0 * * * *'  # every hours
+    - cron: '0 22 * * *'  # JST 7:00
+#    - cron: '0 * * * *'  # every hours
 
 env:
   SID: ${{ secrets.SID }}
