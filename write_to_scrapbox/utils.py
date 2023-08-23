@@ -79,6 +79,8 @@ def extract_previous_notes(prev_lines):
             break
         if MICROFORMAT_IGNORE in line:
             continue
+        if "[*** 🤖" in line:  # section header of previous notes
+            continue
         if MICROFORMAT_TO_AI in line:
             prompt = extract_microformat_to_ai(line)
             raise NotImplementedError("Microformat TO_AI is not yet implemented")
