@@ -235,8 +235,7 @@ def fill_with_related_fragments(rest, query, N=3, ng_list=[]):
         titles.append(payload["title"])
         rest -= s
 
-    digest_str = "\n".join(digests)
-    return titles, digest_str
+    return titles, digests
 
 
 def get_used_titles(lines):
@@ -265,10 +264,12 @@ def overwrite_mode(prev_title, prev_lines):
     lines = [output_page_title, LESS_INTERESTING, section_title]
     rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
 
-    titles, digest_str = fill_with_related_fragments(rest, previous_notes)
+    titles, digests = fill_with_related_fragments(
+        rest, previous_notes, N=10, ng_list=used_pages
+    )
+    digest_str = "\n".join(digests)
 
     prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
-    print(prompt)
     lines.extend(call_gpt(prompt))
 
     lines.append("")
@@ -292,6 +293,7 @@ def call_gpt(prompt, model="gpt-4"):
     if args.skip_gpt:
         print("## Skipped")
         return ["GPT Skipped"]
+    print("--- End of Prompt")
 
     messages = [{"role": "system", "content": prompt}]
     lines = []
@@ -305,7 +307,9 @@ def call_gpt(prompt, model="gpt-4"):
             stop=None,
         )
         ret = response.choices[0].message.content.strip()
+        print("## GPT Response")
         print(ret)
+        print("--- End of GPT Response")
         ret = markdown_to_scrapbox(ret)
         lines.extend(ret.split("\n"))
     except Exception as e:
@@ -329,7 +333,8 @@ def main_branch():
     rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
 
     print("## Fill with related fragments")
-    titles, digest_str = fill_with_related_fragments(rest, previous_notes)
+    titles, digests = fill_with_related_fragments(rest, previous_notes)
+    digest_str = "\n".join(digests)
 
     prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
     lines.extend(call_gpt(prompt))
