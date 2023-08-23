@@ -137,6 +137,39 @@ class TestExtractPreviousNotes(unittest.TestCase):
         self.assertEqual(extracted_notes, expected_notes)
 
 
+def parse_titles(line):
+    """
+    Extracts titles from a line.
+
+    Args:
+        line (str): The line containing the titles.
+
+    Returns:
+        list: A list of titles.
+
+
+    New better format:
+    >>> parse_titles('titles: `["aaa", "ううう", "1,2,3"]`')
+    ['aaa', 'ううう', '1,2,3']
+
+    old format(it may ambiguous when title contains comma):
+    >>> parse_titles("titles: A, B, C")
+    ['A', ' B', ' C']
+
+    """
+    import json
+
+    body = line.split(":")[1].strip()
+    try:
+        if body.startswith("`"):
+            titles = json.loads(body[1:-1])
+            return titles
+    except:
+        pass
+    titles = body.split(",")
+    return titles
+
+
 if __name__ == "__main__":
     import doctest
 

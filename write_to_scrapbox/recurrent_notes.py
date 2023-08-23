@@ -182,17 +182,20 @@ def fill_with_random_fragments(rest):
     return titles, digest_str
 
 
-def fill_with_related_fragments(rest, query, N=3):
+def fill_with_related_fragments(rest, query, N=3, ng_list=[]):
     # fill the rest with vector search ressult fragments
     data = pickle.load(open(f"{PROJECT}.pickle", "rb"))
-    sorted_data = vector_search.get_sorted(data, query)[:N]
+    sorted_data = vector_search.get_sorted(data, query)
 
     digests = []
     titles = []
-    while rest > 0 and sorted_data:
+    while rest > 0 and sorted_data and len(digests) < N:
         p = sorted_data.pop(0)
         payload = p[2]
         title = payload["title"]
+
+        if title in ng_list:
+            continue
 
         # take only 1 fragment from each page
         if title in titles:
@@ -205,6 +208,7 @@ def fill_with_related_fragments(rest, query, N=3):
         s = get_size(payload["text"])
         if s > rest:
             break
+
         digests.append(make_digest(payload))
         titles.append(payload["title"])
         rest -= s
@@ -212,12 +216,16 @@ def fill_with_related_fragments(rest, query, N=3):
     # fill the rest with random fragments
     keys = list(data.keys())
     random.shuffle(keys)
-    while rest > 0:
+    while rest > 0 and keys:
         p = keys.pop(0)
         payload = data[p][1]
+        title = payload["title"]
+
+        if title in ng_list:
+            continue
 
         # take only 1 fragment from each page
-        if payload["title"] in titles:
+        if title in titles:
             continue
 
         s = get_size(payload["text"])
@@ -256,7 +264,9 @@ def overwrite_mode(prev_title, prev_lines):
     section_title = f"[*** {output_page_title}] {date} {CHARACTOR_ICON}"
     lines = [output_page_title, LESS_INTERESTING, section_title]
     rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
+
     titles, digest_str = fill_with_related_fragments(rest, previous_notes)
+
     prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
     print(prompt)
     lines.extend(call_gpt(prompt))
