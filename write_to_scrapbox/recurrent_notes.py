@@ -250,7 +250,8 @@ def overwrite_mode(prev_title, prev_lines):
 
     lines.append("")
     lines.append(EXTRA_INFO_HEADER)
-    lines.append("titles: " + ", ".join(f"{s}" for s in titles))
+    # lines.append("titles: " + ", ".join(f"{s}" for s in titles))
+    lines.append("titles: `{0}`".format(json.dumps(titles, ensure_ascii=False)))
 
     lines.append(f"generated: {date}")
 
