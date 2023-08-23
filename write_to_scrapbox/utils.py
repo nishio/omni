@@ -61,6 +61,9 @@ def extract_previous_notes(prev_lines):
     Raises:
         NotImplementedError: If a microformat TO_AI line is encountered.
     """
+    if not prev_lines:
+        return ""
+
     # Remove title line
     prev_lines.pop(0)
 
