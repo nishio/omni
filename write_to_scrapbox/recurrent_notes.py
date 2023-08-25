@@ -377,6 +377,10 @@ def multiheads():
         if page["title"].startswith("🤖🔁"):
             heads.append((page["title"], page["lines"]))
 
+    # to avoid too many updates
+    random.shuffle(heads)
+    heads = heads[:10]
+
     pages_to_update = []
     for head in heads:
         pages_to_update.extend(overwrite_mode(*head))
