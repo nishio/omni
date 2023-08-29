@@ -269,6 +269,20 @@ def overwrite_mode(prev_title, prev_lines):
     section_title = f"[*** {output_page_title}] {date} {CHARACTOR_ICON}"
     lines = [output_page_title, LESS_INTERESTING, section_title]
     rest = 4000 - get_size(PROMPT) - get_size(previous_notes)
+    if rest < 0:
+        print(f"previous notes is too long, {get_size(previous_notes)}")
+        buf = []
+        rest = 4000 - get_size(PROMPT)
+        previous_notes_lines = previous_notes.split("\n")
+        while rest > 0:
+            line = previous_notes_lines.pop(0)
+            s = get_size(line)
+            if s > rest:
+                break
+            buf.append(line)
+            rest -= s
+        previous_notes = "\n".join(buf)
+        rest = 0
 
     titles, digests = fill_with_related_fragments(
         rest, previous_notes, N=10, ng_list=used_pages
