@@ -42,6 +42,7 @@ PROJECT = os.getenv("PROJECT_NAME")
 assert OPENAI_API_KEY and PROJECT
 openai.api_key = OPENAI_API_KEY
 
+IGNORE_AI_GENERATED_PAGES = False
 
 # main prompt, including chadacter settings
 PROMPT = "".join(
@@ -203,7 +204,7 @@ def fill_with_related_fragments(rest, query, N=3, ng_list=[]):
             continue
 
         # omit AI-generated pages
-        if title.startswith("🤖"):
+        if IGNORE_AI_GENERATED_PAGES and title.startswith("🤖"):
             continue
 
         s = get_size(payload["text"])
