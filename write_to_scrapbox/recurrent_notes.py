@@ -292,7 +292,7 @@ def overwrite_mode(prev_title, prev_lines):
     prompt = PROMPT.format(digest_str=digest_str, previous_notes=previous_notes)
     response = call_gpt(prompt)
     if not response:
-        response = ["`AI_IGNORE: GPT failed`"] + previous_notes.split("\n")
+        response = ["`AI_IGNORE: GPT failed`"]
     lines.extend(response)
 
     lines.append("")
@@ -336,6 +336,8 @@ def call_gpt(prompt, model="gpt-4"):
         ret = markdown_to_scrapbox(ret)
         lines.extend(ret.split("\n"))
     except Exception as e:
+        print("## GPT Error")
+        print(e)
         # lines.append("Failed to generate report.")
         # lines.append(str(e))
         # lines.append("Prompt:")
