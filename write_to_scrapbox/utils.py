@@ -202,6 +202,17 @@ def parse_titles(line):
     return titles
 
 
+def get_api_url(url):
+    """
+    >>> get_api_url("https://scrapbox.io/nishio/example")
+    'https://scrapbox.io/api/pages/nishio/example'
+    """
+    api_url = re.sub(
+        r"(https://scrapbox\.io)/([^/]+)/([^/]+)", r"\1/api/pages/\2/\3", url
+    )
+    return api_url
+
+
 if __name__ == "__main__":
     import doctest
 

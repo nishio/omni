@@ -33,6 +33,7 @@ from utils import (
     EXTRA_INFO_HEADER,
     extract_previous_notes,
     parse_titles,
+    get_api_url,
 )
 import vector_search
 
@@ -43,6 +44,7 @@ assert OPENAI_API_KEY and PROJECT
 openai.api_key = OPENAI_API_KEY
 
 IGNORE_AI_GENERATED_PAGES = False
+IS_PRIVATE_PROJECT = True
 
 # main prompt, including chadacter settings
 PROMPT = "".join(
@@ -139,10 +141,15 @@ def read_note_from_scrapbox(url):
 
         url = input("url> ")
         print("url:", urllib.parse.unquote(url))
-    api_url = re.sub(
-        r"(https://scrapbox\.io)/([^/]+)/([^/]+)", r"\1/api/pages/\2/\3", url
-    )
-    page = requests.get(api_url).json()  # currently not supported private project
+
+    if IS_PRIVATE_PROJECT:
+        from read_private_project import read_private_pages
+
+        page = read_private_pages(url)
+    else:
+        api_url = get_api_url(url)
+        page = requests.get(api_url).json()
+
     return page["title"], [line["text"] for line in page["lines"]]
 
 
