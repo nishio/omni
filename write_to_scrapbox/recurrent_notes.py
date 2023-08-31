@@ -44,7 +44,7 @@ assert OPENAI_API_KEY and PROJECT
 openai.api_key = OPENAI_API_KEY
 
 IGNORE_AI_GENERATED_PAGES = False
-IS_PRIVATE_PROJECT = True
+IS_PRIVATE_PROJECT = False
 
 # main prompt, including chadacter settings
 PROMPT = "".join(
