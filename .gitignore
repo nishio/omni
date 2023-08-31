@@ -3,3 +3,7 @@ myenv
 .vscode
 *.json
 __pycache__
+
+# local note
+data.txt
+note*.md
