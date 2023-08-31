@@ -431,7 +431,8 @@ def main():
         prev_title, prev_lines = read_note_from_scrapbox(args.url)
         return overwrite_mode(prev_title, prev_lines)
 
-    pages_to_update = main_branch()
+    # pages_to_update = main_branch()
+    pages_to_update = []
 
     if not args.url:
         # when url is specified, user want to update the page only
