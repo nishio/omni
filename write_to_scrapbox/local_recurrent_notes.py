@@ -63,7 +63,7 @@ PROMPT += """
 """
 
 CHARACTOR_ICON = "[omni.icon]"
-
+END_LINE_MARKER = "end line: "
 
 enc = tiktoken.get_encoding("cl100k_base")
 
@@ -92,17 +92,20 @@ def fill_with_lines(rest, lines, start=0):
     return chosen, index
 
 
-def fill_with_related_fragments(rest, query, N=3):
+def fill_with_related_fragments(rest, query, N=3, ng_list=[]):
     # fill the rest with vector search ressult fragments
     data = pickle.load(open(f"{PROJECT}.pickle", "rb"))
-    sorted_data = vector_search.get_sorted(data, query)[:N]
+    sorted_data = vector_search.get_sorted(data, query)
 
     digests = []
     titles = []
-    while rest > 0 and sorted_data:
+    while rest > 0 and sorted_data and len(digests) < N:
         p = sorted_data.pop(0)
         payload = p[2]
         title = payload["title"]
+
+        if title in ng_list:
+            continue
 
         # take only 1 fragment from each page
         if title in titles:
@@ -115,30 +118,12 @@ def fill_with_related_fragments(rest, query, N=3):
         s = get_size(payload["text"])
         if s > rest:
             break
+
         digests.append(make_digest(payload))
         titles.append(payload["title"])
         rest -= s
 
-    # fill the rest with random fragments
-    keys = list(data.keys())
-    random.shuffle(keys)
-    while rest > 0:
-        p = keys.pop(0)
-        payload = data[p][1]
-
-        # take only 1 fragment from each page
-        if payload["title"] in titles:
-            continue
-
-        s = get_size(payload["text"])
-        if s > rest:
-            break
-        digests.append(make_digest(payload))
-        titles.append(payload["title"])
-        rest -= s
-
-    digest_str = "\n".join(digests)
-    return titles, digest_str
+    return digests, titles, rest
 
 
 def call_gpt(prompt, model="gpt-4"):
@@ -202,20 +187,36 @@ def main():
         default=None,
         help="start from a specific line",
     )
+    parser.add_argument(
+        "--input-file",
+        "--in",
+        "-i",
+        action="store",
+        default="data.txt",
+        help="input file",
+    )
+    parser.add_argument(
+        "--output-file",
+        "--out",
+        "-o",
+        action="store",
+        default="note.md",
+        help="input file",
+    )
     args = parser.parse_args()
 
-    book_lines = open("data.txt").read().split("\n")
+    book_lines = open(args.input_file).read().split("\n")
     title = book_lines[0]
     print(repr(title))
 
     try:
-        prev_lines = open("note.md").read().split("\n")
+        prev_lines = open(args.output_file).read().split("\n")
     except FileNotFoundError:
         prev_lines = []
 
     if args.start is None:
         for line in prev_lines:
-            if line.startswith("end line: "):
+            if line.startswith(END_LINE_MARKER):
                 start = int(line.split(":")[1].strip())
                 break
         else:
@@ -245,14 +246,14 @@ def main():
     lines.append("")
     lines.append(EXTRA_INFO_HEADER)
     # lines.append("titles: " + ", ".join(f"{s}" for s in titles))
-    lines.append(f"size of previous note: {len(previous_notes)}")
-    lines.append(f"size of book fragment: {len(book_fragment_str)}")
+    lines.append(f"size of previous note: {get_size(previous_notes)}")
+    lines.append(f"size of book fragment: {get_size(book_fragment_str)}")
     lines.append(f"start line: {start}")
-    lines.append(f"end line: {index}")
+    lines.append(f"{END_LINE_MARKER}{index}")
 
-    lines.extend(original_prev_lines)
+    lines.extend(original_prev_lines)  # keep the previous contents
 
-    with open("note.md", "w") as f:
+    with open(args.output_file, "w") as f:
         f.write("\n".join(lines))
 
 
