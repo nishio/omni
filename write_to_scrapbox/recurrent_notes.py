@@ -27,6 +27,8 @@ import re
 import requests
 import argparse
 from urllib.parse import quote
+import urllib.parse
+
 from utils import (
     markdown_to_scrapbox,
     LESS_INTERESTING,
@@ -133,11 +135,6 @@ def read_note_from_scrapbox(url):
     """
     url example: https://scrapbox.io/nishio/%F0%9F%A4%962023-08-13_07:08
     """
-    if url == "input":
-        import urllib.parse
-
-        url = input("url> ")
-        print("url:", urllib.parse.unquote(url))
 
     if IS_PRIVATE_PROJECT:
         from read_private_project import read_private_pages
@@ -432,8 +429,26 @@ def main():
 
     if args.overwrite and args.url:
         # URL-specific overwrite, usually triggered by human
-        prev_title, prev_lines = read_note_from_scrapbox(args.url)
-        return overwrite_mode(prev_title, prev_lines)
+        urls = []
+        if args.url == "input":
+            url = input("url> ")
+            print("url:", urllib.parse.unquote(url))
+            urls.append(url)
+        elif args.url == "multi":
+            while True:
+                url = input("url> ")
+                if url == "":
+                    break
+                print("url:", urllib.parse.unquote(url))
+                urls.append(url)
+        else:
+            urls.append(args.url)
+
+        result = []
+        for url in urls:
+            prev_title, prev_lines = read_note_from_scrapbox(url)
+            result.extend(overwrite_mode(prev_title, prev_lines))
+        return result
 
     # pages_to_update = main_branch()
     pages_to_update = []
