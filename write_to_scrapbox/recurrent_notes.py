@@ -47,6 +47,7 @@ openai.api_key = OPENAI_API_KEY
 
 IGNORE_AI_GENERATED_PAGES = False
 IS_PRIVATE_PROJECT = False
+MAX_UPDATE_PER_RUN = None
 
 # main prompt, including chadacter settings
 PROMPT = "".join(
@@ -396,8 +397,9 @@ def multiheads():
             heads.append((page["title"], page["lines"]))
 
     # to avoid too many updates
-    random.shuffle(heads)
-    heads = heads[:10]
+    if MAX_UPDATE_PER_RUN is not None and len(heads) > MAX_UPDATE_PER_RUN:
+        random.shuffle(heads)
+        heads = heads[:MAX_UPDATE_PER_RUN]
 
     pages_to_update = []
     for head in heads:
