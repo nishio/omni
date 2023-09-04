@@ -1,9 +1,9 @@
-name: Embed
+name: Pioneering
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 23 * * *'  # JST 7:00
+    - cron: '0 23 * * *'  # JST 8:00
 #    - cron: '0 * * * *'  # every hours
 
 env:
