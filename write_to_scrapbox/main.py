@@ -3,11 +3,11 @@ entrypoint from github actions
 """
 
 import scrapbox_io
-import recurrent_notes
+import iterative_commenter
 
 
 def main(dry=False):
-    pages = recurrent_notes.main()
+    pages = iterative_commenter.main()
     scrapbox_io.write_pages(pages)
     print("write ok")
 
