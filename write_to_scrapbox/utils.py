@@ -1,7 +1,12 @@
 import re
 import unittest
 
+# old format marker to separate AI generated notes
 LESS_INTERESTING = "___BELOW_IS_LESS_INTERESTING___"
+# new format marker to separate AI generated notes (from iterarive commenter)
+AI_GENERATED_MARKER = "__BELOW_IS_AI_GENERATED__"
+
+
 EXTRA_INFO_HEADER = "[* extra info]"
 MICROFORMAT_IGNORE = "`AI_IGNORE"
 MICROFORMAT_TO_AI = "`TO_AI:"
@@ -48,7 +53,7 @@ def extract_microformat_to_ai(input_str):
         return None
 
 
-def extract_previous_notes(prev_lines):
+def extract_previous_notes(prev_lines, version=1):
     """
     Extracts previous notes from a list of lines, filtering out less interesting and extra information headers.
 
@@ -76,6 +81,7 @@ def extract_previous_notes(prev_lines):
         prev_lines.pop(0)
 
     previous_notes_lines = []
+    to_ai = []
 
     # Extract previous notes lines until less interesting, extra info header, or microformat is encountered
     for line in prev_lines:
@@ -87,20 +93,25 @@ def extract_previous_notes(prev_lines):
             # if the previous notes is empty, continue to pick less interesting lines
             previous_notes_lines = []
             continue
+        if line == AI_GENERATED_MARKER:
+            break
         if line == EXTRA_INFO_HEADER:
             break
         if MICROFORMAT_IGNORE in line:
             continue
         if "[*** 🤖" in line:  # section header of previous notes
-            continue
+            continue  # ignore
         if MICROFORMAT_TO_AI in line:
             prompt = extract_microformat_to_ai(line)
-            raise NotImplementedError("Microformat TO_AI is not yet implemented")
+            to_ai.append(prompt)
 
         previous_notes_lines.append(line)
 
     # Combine extracted lines into a string
     previous_notes = "\n".join(previous_notes_lines)
+
+    if version == 1:
+        return previous_notes
 
     return previous_notes
 
