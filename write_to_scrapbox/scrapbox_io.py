@@ -17,6 +17,9 @@ import_api_url = f"https://scrapbox.io/api/page-data/import/{PROJECT}.json"
 
 
 def write_pages(pages):
+    if pages == []:
+        print("no pages to write")
+        return
     cookie = "connect.sid=" + SID
     r = requests.get(API_ME, headers={"Cookie": cookie})
     r.raise_for_status()
