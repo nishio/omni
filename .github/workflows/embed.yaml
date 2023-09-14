@@ -30,10 +30,8 @@ jobs:
           cache: 'pip' # caching pip dependencies
       - run: pip install -r requirements.txt
 
-      - uses: denoland/setup-deno@v1
-
       - name: Export from Scrapbox(/PROJECT_NAME to PROJECT_NAME.json)
-        run: export_from_scrapbox/start.sh
+        run: python export_from_scrapbox/main.py
 
 
       - name: Authenticate for gh
