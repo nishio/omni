@@ -20,6 +20,7 @@ from tqdm import tqdm
 import re
 import dotenv
 import os
+import argparse
 
 
 DEFAULT_BLOCK_SIZE = 500
@@ -29,6 +30,19 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PROJECT = os.getenv("PROJECT_NAME")
 openai.api_key = OPENAI_API_KEY
 enc = tiktoken.get_encoding("cl100k_base")
+
+parser = argparse.ArgumentParser(description="Export project data.")
+parser.add_argument(
+    "--project",
+    type=str,
+    default=PROJECT,
+    help="The name of the project to export.",
+)
+parser.add_argument(
+    "--is-private", action="store_true", help="If set, the page will be private."
+)
+args = parser.parse_args()
+PROJECT = args.project
 
 
 def get_size(text):
@@ -262,8 +276,9 @@ class VectorStore:
 
 if __name__ == "__main__":
     PAGE_LIMIT = 0  # 0 means no limit
+    is_public = not args.is_private
     update_from_scrapbox_json(
         f"{PROJECT}.pickle",
         f"{PROJECT}.json",
-        is_public=True,
+        is_public=is_public,
     )
