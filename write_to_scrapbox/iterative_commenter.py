@@ -176,7 +176,10 @@ def fill_with_random_fragments(rest):
 def fill_with_related_fragments(rest, query, N=3, ng_list=[]):
     # fill the rest with vector search ressult fragments
     assert query != ""
-    data = pickle.load(open(f"{PROJECT}.pickle", "rb"))
+    data = {}
+    print("using pickles:", args.pickles)
+    for p in args.pickles.split(","):
+        data.update(pickle.load(open(f"{p}.pickle", "rb")))
     sorted_data = vector_search.get_sorted(data, query)
 
     digests = []
@@ -469,11 +472,16 @@ def main():
         help="Enable the infinite pioneering mode to extend or generate new content.",
         required=False,
     )
-
     parser.add_argument(
         "--skip-gpt",
         action="store_true",
         help="skip GPT API call for tests",
+    )
+    parser.add_argument(
+        "--pickles",
+        type=str,
+        default=PROJECT,
+        help="pickles to use for vector search",
     )
     args = parser.parse_args()
 
