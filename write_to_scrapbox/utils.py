@@ -217,7 +217,11 @@ def get_api_url(url):
     """
     >>> get_api_url("https://scrapbox.io/nishio/example")
     'https://scrapbox.io/api/pages/nishio/example'
+    >>> get_api_url("https://scrapbox.io/api/pages/nishio/example")
+    'https://scrapbox.io/api/pages/nishio/example'
     """
+    if "api/pages/" in url:
+        return url
     api_url = re.sub(
         r"(https://scrapbox\.io)/([^/]+)/([^/]+)", r"\1/api/pages/\2/\3", url
     )
