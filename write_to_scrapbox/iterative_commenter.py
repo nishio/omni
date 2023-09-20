@@ -324,7 +324,10 @@ def overwrite_mode(prev_title, prev_lines, original_prev_lines=None):
     lines.append(EXTRA_INFO_HEADER)
     # lines.append("titles: " + ", ".join(f"{s}" for s in titles))
     lines.append("titles: `{0}`".format(json.dumps(titles, ensure_ascii=False)))
-
+    # show search result
+    lines.append("code:fragments")
+    for digest in digests:
+        lines.extend([" " + line for line in digest.split("\n")])
     lines.append(f"generated: {date}")
 
     pages = [{"title": output_page_title, "lines": lines}]
