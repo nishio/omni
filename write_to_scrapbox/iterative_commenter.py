@@ -14,9 +14,10 @@ import tiktoken
 import re
 import requests
 import argparse
-from urllib.parse import quote
-import urllib.parse
+from urllib.parse import quote, quote_plus, unquote
 import scrapbox_io
+import read_private_project
+
 
 from utils import (
     markdown_to_scrapbox,
@@ -173,9 +174,30 @@ def fill_with_random_fragments(rest):
     return titles, digest_str
 
 
-def load_old_pickle(filename):
-    data = pickle.load(open(f"pickles/{filename}", "rb"))
-    basename = filename.split(".")[0]
+def get_pickle_filename(name):
+    if not name.endswith(".pickle"):
+        filename = f"{name}.pickle"
+    else:
+        filename = name
+    if os.path.exists(filename):
+        return filename
+    filename = f"pickles/{filename}"
+    assert os.path.exists(filename)
+    return filename
+
+
+def load_one_pickle(name):
+    """
+    accepts both old and new format
+    """
+    print("load_one_pickle:", name)
+    filename = get_pickle_filename(name)
+    if os.path.exists(filename):
+        data = pickle.load(open(filename, "rb"))
+    else:
+        data = pickle.load(open(f"pickles/{filename}", "rb"))
+    basename = os.path.basename(filename).split(".")[0]
+
     for k in data:
         if isinstance(data[k][1], str):
             data[k] = (
@@ -187,26 +209,45 @@ def load_old_pickle(filename):
                     "is_public": True,
                 },
             )
+        else:
+            payload = data[k][1]
+            payload["title"] = f"{basename}/{payload['title']}"
+            data[k] = (data[k][0], payload)
 
+    return data
+
+
+def load_pickles():
+    data = {}
+    print("using pickles:", args.pickles)
+    if args.pickles == PROJECT:
+        data = load_one_pickle(PROJECT)
+    elif args.pickles == "all":
+        for f in os.listdir(".") + os.listdir("pickles"):
+            # if "nishio" in f:
+            #     continue
+            if f == "nishio.pickle":
+                continue
+            if f.endswith(".pickle"):
+                data.update(load_one_pickle(f))
+        print("size of all data:", len(data))
+    else:
+        for f in args.pickles.split(","):
+            data.update(load_one_pickle(f))
     return data
 
 
 def fill_with_related_fragments(rest, query, N=3, ng_list=[]):
     # fill the rest with vector search ressult fragments
     assert query != ""
-    data = {}
-    print("using pickles:", args.pickles)
-    if args.pickles == PROJECT:
-        data = pickle.load(open(f"{PROJECT}.pickle", "rb"))
-    elif args.pickles == "all":
-        for f in os.listdir("pickles"):
-            if f.endswith(".pickle"):
-                data.update(load_old_pickle(f))
-        data.update(pickle.load(open(f"{PROJECT}.pickle", "rb")))
-    else:
-        for f in args.pickles.split(","):
-            data.update(load_old_pickle(f))
+
+    start_time = time.perf_counter()
+    data = load_pickles()
+    print("load pickles:", time.perf_counter() - start_time)
+
+    start_time = time.perf_counter()
     sorted_data = vector_search.get_sorted(data, query)
+    print("vector search:", time.perf_counter() - start_time)
 
     digests = []
     titles = []
@@ -439,14 +480,23 @@ def has_ai_generated_contents(lines):
 
 def pioneer_loop():
     print("# Pioneer-Loop mode")
+    project = PROJECT
+    if args.pioneer_loop_private:
+        project = "omni-private"
     while True:
         pages_to_update = pioneer()
         if pages_to_update:
-            scrapbox_io.write_pages(pages_to_update)
+            scrapbox_io.write_pages(pages_to_update, project)
             time.sleep(60 * 10)  # wait 10 minutes
         else:
             print("no pages to update")
             time.sleep(60)  # wait 1 minute
+
+
+def get_links_of_page(url):
+    # page = requests.get(url).json()
+    page = read_private_project.read_private_pages(url)
+    return page["links"]
 
 
 def pioneer():
@@ -459,17 +509,31 @@ def pioneer():
 
     """
     print("# Pioneer mode")
-    START_URL = (
-        f"https://scrapbox.io/api/pages/{PROJECT}/%E2%9C%8D%EF%B8%8F%F0%9F%A4%96"
-    )
-    page = requests.get(START_URL).json()
+    START_URL = ()
+    links = []
+    if args.pioneer_loop_private:
+        links.extend(
+            get_links_of_page(f"https://scrapbox.io/api/pages/omni-private/entry")
+        )
+    else:
+        links.extend(
+            get_links_of_page(
+                f"https://scrapbox.io/api/pages/nishio/%E2%9C%8D%EF%B8%8F%F0%9F%A4%96"
+            )
+        )
+
     pages_to_update = []
-    for link in page["links"]:
-        link = quote(link.replace(" ", "_"))
-        url = f"https://scrapbox.io/api/pages/{PROJECT}/{link}"
+    for link in links:
+        link = quote_plus(link.replace(" ", "_"))
+
+        # project may change
+        project = PROJECT
+        if args.pioneer_loop_private:
+            project = "omni-private"
+        url = f"https://scrapbox.io/api/pages/{project}/{link}"
 
         try:
-            page = requests.get(url).json()
+            page = read_private_project.read_private_pages(url)
         except Exception as e:
             print("error:", e, "url:", url)
             continue
@@ -481,11 +545,16 @@ def pioneer():
 
         print(link)
         pages_to_update.extend(overwrite_mode(title, lines, page["lines"]))
-        json.dump(pages_to_update, open("pages_to_update.json", "w"))
+        json.dump(
+            pages_to_update,
+            open("pages_to_update.json", "w"),
+            indent=2,
+            ensure_ascii=False,
+        )
     return pages_to_update
 
 
-def main():
+def parse_args():
     global args
     parser = argparse.ArgumentParser(description="Process a URL")
     parser.add_argument("--url", type=str, help="The URL to process", required=False)
@@ -502,6 +571,12 @@ def main():
         required=False,
     )
     parser.add_argument(
+        "--pioneer-loop-private",
+        action="store_true",
+        help="do pioneer-loop in private project",
+        required=False,
+    )
+    parser.add_argument(
         "--skip-gpt",
         action="store_true",
         help="skip GPT API call for tests",
@@ -514,7 +589,9 @@ def main():
     )
     args = parser.parse_args()
 
-    if args.pioneer_loop:
+
+def main():
+    if args.pioneer_loop or args.pioneer_loop_private:
         pioneer_loop()
         return []
 
@@ -526,14 +603,14 @@ def main():
         urls = []
         if args.url == "input":
             url = input("url> ")
-            print("url:", urllib.parse.unquote(url))
+            print("url:", unquote(url))
             urls.append(url)
         elif args.url == "multi":
             while True:
                 url = input("url> ")
                 if url == "":
                     break
-                print("url:", urllib.parse.unquote(url))
+                print("url:", unquote(url))
                 urls.append(url)
         else:
             urls.append(args.url)
@@ -554,6 +631,9 @@ def main():
 
 
 if __name__ == "__main__":
+    parse_args()
     pages = main()
     scrapbox_io.write_pages(pages)
     print("write ok")
+
+    # print(fill_with_related_fragments(1000, "test", N=10, ng_list=[]))
