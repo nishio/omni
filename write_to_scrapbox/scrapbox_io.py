@@ -13,13 +13,14 @@ PROJECT = os.getenv("PROJECT_NAME")
 
 
 API_ME = "https://scrapbox.io/api/users/me"
-import_api_url = f"https://scrapbox.io/api/page-data/import/{PROJECT}.json"
 
 
-def write_pages(pages):
+def write_pages(pages, project=PROJECT):
     if pages == []:
         print("no pages to write")
         return
+    import_api_url = f"https://scrapbox.io/api/page-data/import/{project}.json"
+
     cookie = "connect.sid=" + SID
     r = requests.get(API_ME, headers={"Cookie": cookie})
     r.raise_for_status()
