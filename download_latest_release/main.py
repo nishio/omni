@@ -7,9 +7,13 @@ Not used in Github Actions.
 import requests
 import os
 
-owner = "nishio"
-repo = "omni"
-output_dir = "."
+import argparse
+
+parser = argparse.ArgumentParser(description="Download Latest Release")
+parser.add_argument("--owner", type=str, help="Repo owner", default="nishio")
+parser.add_argument("--repo", type=str, help="Repo name", default="omni")
+parser.add_argument("--output-dir", type=str, help="output dir", default=".")
+args = parser.parse_args()
 
 
 def download_latest_release(owner, repo, output_dir="."):
@@ -51,4 +55,4 @@ def download_latest_release(owner, repo, output_dir="."):
 
 
 if __name__ == "__main__":
-    download_latest_release(owner, repo, output_dir)
+    download_latest_release(args.owner, args.repo, args.output_dir)
