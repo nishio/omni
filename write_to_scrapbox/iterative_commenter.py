@@ -57,10 +57,10 @@ PROMPT = "".join(
 
 PROMPT += """
 
-### note
+## note
 {previous_notes}
 
-### fragments
+## fragments
 {digest_str}
 """
 
@@ -77,7 +77,7 @@ def get_size(text):
 def make_digest(payload):
     title = payload["title"]
     text = payload["text"]
-    return f"{title}\n{text}\n\n"
+    return f"### {title}\n{text}\n\n"
 
 
 def find_last_note_from_pages(pages):
@@ -173,13 +173,39 @@ def fill_with_random_fragments(rest):
     return titles, digest_str
 
 
+def load_old_pickle(filename):
+    data = pickle.load(open(f"pickles/{filename}", "rb"))
+    basename = filename.split(".")[0]
+    for k in data:
+        if isinstance(data[k][1], str):
+            data[k] = (
+                data[k][0],
+                {
+                    "title": f"{basename}/{data[k][1]}",
+                    "project": basename,
+                    "text": k,
+                    "is_public": True,
+                },
+            )
+
+    return data
+
+
 def fill_with_related_fragments(rest, query, N=3, ng_list=[]):
     # fill the rest with vector search ressult fragments
     assert query != ""
     data = {}
     print("using pickles:", args.pickles)
-    for p in args.pickles.split(","):
-        data.update(pickle.load(open(f"{p}.pickle", "rb")))
+    if args.pickles == PROJECT:
+        data = pickle.load(open(f"{PROJECT}.pickle", "rb"))
+    elif args.pickles == "all":
+        for f in os.listdir("pickles"):
+            if f.endswith(".pickle"):
+                data.update(load_old_pickle(f))
+        data.update(pickle.load(open(f"{PROJECT}.pickle", "rb")))
+    else:
+        for f in args.pickles.split(","):
+            data.update(load_old_pickle(f))
     sorted_data = vector_search.get_sorted(data, query)
 
     digests = []

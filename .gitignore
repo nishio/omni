@@ -10,3 +10,4 @@ note*.md
 
 # ignore cache
 nishio.pickle
+nue.pickle
