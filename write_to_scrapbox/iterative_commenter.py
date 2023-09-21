@@ -591,6 +591,8 @@ def parse_args():
 
 
 def main():
+    "Entrypoint from Github Actions"
+    parse_args()
     if args.pioneer_loop or args.pioneer_loop_private:
         pioneer_loop()
         return []
@@ -631,9 +633,10 @@ def main():
 
 
 if __name__ == "__main__":
-    parse_args()
+    # main() is entrypoint from Github Actions
     pages = main()
     scrapbox_io.write_pages(pages)
     print("write ok")
 
+    # parse_args()
     # print(fill_with_related_fragments(1000, "test", N=10, ng_list=[]))
