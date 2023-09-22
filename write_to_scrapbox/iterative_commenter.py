@@ -186,6 +186,12 @@ def get_pickle_filename(name):
     return filename
 
 
+def add_picklename_to_title(title, project, default_project=PROJECT):
+    if project == default_project:
+        return title
+    return f"{project}/{title}"
+
+
 def load_one_pickle(name):
     """
     accepts both old and new format
@@ -196,22 +202,22 @@ def load_one_pickle(name):
         data = pickle.load(open(filename, "rb"))
     else:
         data = pickle.load(open(f"pickles/{filename}", "rb"))
-    basename = os.path.basename(filename).split(".")[0]
+    picklename = os.path.basename(filename).split(".")[0]
 
     for k in data:
         if isinstance(data[k][1], str):
             data[k] = (
                 data[k][0],
                 {
-                    "title": f"{basename}/{data[k][1]}",
-                    "project": basename,
+                    "title": add_picklename_to_title(data[k][1], picklename),
+                    "project": picklename,
                     "text": k,
                     "is_public": True,
                 },
             )
         else:
             payload = data[k][1]
-            payload["title"] = f"{basename}/{payload['title']}"
+            payload["title"] = add_picklename_to_title(payload["title"], picklename)
             data[k] = (data[k][0], payload)
 
     return data
