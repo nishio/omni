@@ -309,7 +309,9 @@ def get_used_titles(lines):
     return list(set(all_titles))
 
 
-def overwrite_mode(prev_title, prev_lines, original_prev_lines=None):
+def overwrite_mode(
+    prev_title, prev_lines, original_prev_lines=None, show_search_result=False
+):
     print("overwrite:", prev_title)
     if original_prev_lines is None:
         original_prev_lines = prev_lines.copy()
@@ -366,9 +368,10 @@ def overwrite_mode(prev_title, prev_lines, original_prev_lines=None):
     # lines.append("titles: " + ", ".join(f"{s}" for s in titles))
     lines.append("titles: `{0}`".format(json.dumps(titles, ensure_ascii=False)))
     # show search result
-    lines.append("code:fragments")
-    for digest in digests:
-        lines.extend([" " + line for line in digest.split("\n")])
+    if show_search_result:
+        lines.append("code:fragments")
+        for digest in digests:
+            lines.extend([" " + line for line in digest.split("\n")])
     lines.append(f"generated: {date}")
 
     pages = [{"title": output_page_title, "lines": lines}]
@@ -544,7 +547,11 @@ def pioneer():
             continue
 
         print(link)
-        pages_to_update.extend(overwrite_mode(title, lines, page["lines"]))
+        pages_to_update.extend(
+            overwrite_mode(title, lines, page["lines"], show_search_result=True)
+        )
+
+        # backup result
         json.dump(
             pages_to_update,
             open("pages_to_update.json", "w"),
