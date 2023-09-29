@@ -570,6 +570,13 @@ def pioneer():
             continue
 
         print(link)
+        # show detail
+        show_search_result = False
+        do_direct_link = False
+        if args.pioneer_loop_private:
+            show_search_result = True
+            do_direct_link = True
+
         pages_to_update.extend(
             overwrite_mode(
                 title,
