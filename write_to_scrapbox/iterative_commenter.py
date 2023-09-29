@@ -316,7 +316,11 @@ def get_used_titles(lines):
 
 
 def overwrite_mode(
-    prev_title, prev_lines, original_prev_lines=None, show_search_result=False
+    prev_title,
+    prev_lines,
+    original_prev_lines=None,
+    show_search_result=False,
+    do_direct_link=False,
 ):
     print("overwrite:", prev_title)
     if original_prev_lines is None:
@@ -373,6 +377,13 @@ def overwrite_mode(
     lines.append(EXTRA_INFO_HEADER)
     # lines.append("titles: " + ", ".join(f"{s}" for s in titles))
     lines.append("titles: `{0}`".format(json.dumps(titles, ensure_ascii=False)))
+    if do_direct_link:
+        for t in titles:
+            if "/" in t:
+                lines.append(f"[/{t}]")
+            else:
+                lines.append(f"[{t}]")
+
     # show search result
     if show_search_result:
         lines.append("code:fragments")
@@ -554,7 +565,13 @@ def pioneer():
 
         print(link)
         pages_to_update.extend(
-            overwrite_mode(title, lines, page["lines"], show_search_result=True)
+            overwrite_mode(
+                title,
+                lines,
+                page["lines"],
+                show_search_result=True,
+                do_direct_link=True,
+            )
         )
 
         # backup result
