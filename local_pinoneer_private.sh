@@ -13,6 +13,7 @@ python make_vecs_from_json/main.py --project omni-private --is-private
 # download other public embedded project
 python download_latest_release/main.py --repo omoikane-embed-unnamed-project
 python download_latest_release/main.py --repo omoikane-embed
+python download_latest_release/main.py --repo omni
 
 
 python write_to_scrapbox/iterative_commenter.py --pickles all --pioneer-loop-private
