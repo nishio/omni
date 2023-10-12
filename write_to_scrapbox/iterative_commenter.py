@@ -238,8 +238,8 @@ def load_pickles():
         for f in os.listdir(".") + os.listdir("pickles"):
             # if "nishio" in f:
             #     continue
-            if f == "nishio.pickle":
-                continue
+            # if f == "nishio.pickle":
+            #     continue
             if f.endswith(".pickle"):
                 data.update(load_one_pickle(f))
         print("size of all data:", len(data))
