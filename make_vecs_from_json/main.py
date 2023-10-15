@@ -143,6 +143,9 @@ def update_from_scrapbox_json(
         buf = []
         title = p["title"]
         for line in p["lines"]:
+            # replace special token
+            line = line.replace("<|endoftext|>", " ")
+
             buf.append(line)
             body = clean(" ".join(buf))
             if get_size(body) > block_size:
