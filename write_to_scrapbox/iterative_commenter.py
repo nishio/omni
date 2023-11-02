@@ -668,9 +668,11 @@ def main():
 
     pages_to_update = []
 
-    if not args.url:
-        # when url is specified, user want to update the page only
-        pages_to_update.extend(multiheads())
+    # disabled multiheads (2023-11-02)
+    if 0:
+        if not args.url:
+            # when url is specified, user want to update the page only
+            pages_to_update.extend(multiheads())
 
     return pages_to_update
 
